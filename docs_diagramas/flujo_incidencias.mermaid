@@ -1,0 +1,12 @@
+flowchart TD
+    A[Inicio: Usuario crea incidencia] --> B{¿Asignada?}
+    B -- No --> C[Admin revisa y asigna técnico]
+    B -- Sí --> D[Técnico recibe notificación]
+    C --> D
+    D --> E[Técnico programa y ejecuta atención]
+    E --> F[Técnico registra solución y evidencia]
+    F --> G[Estado: Resuelto]
+    G --> H{¿Usuario conforme?}
+    H -- No (Reabrir) --> E
+    H -- Sí (Confirmar) --> I[Estado: Cerrado]
+    I --> J[Fin del proceso]

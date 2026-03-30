@@ -1,0 +1,26 @@
+# Entorno virtual
+.venv/
+env/
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Base de datos local (opcional)
+db.sqlite3
+
+# Archivos de medios (fotos subidas por usuarios)
+media/
+
+# Archivos requeridos para migracion local y Docker
+.env
+data.json
+docker-compose.override.yml
+*.sql
+
+# IDEs y otros
+.vscode/
+.idea/
+docs_diagrams/
+*.log

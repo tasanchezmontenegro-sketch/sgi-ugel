@@ -1,0 +1,17 @@
+graph TD
+    User((Usuario)) -->|Request HTTP/WS| WebServer[Servidor Web / Nginx]
+    WebServer -->|WSGI| Django[Django Core]
+    WebServer -->|ASGI| Daphne[Daphne / Channels]
+    
+    subgraph Django_Framework
+        URLs[URL Resolver] --> View[View Logic]
+        View --> Models[Models / ORM]
+        View --> Templates[Templates / HTML + HTMX]
+        Models --> DB[(PostgreSQL)]
+    end
+    
+    Daphne --> Cons[Consumers]
+    Cons --> Redis[(Redis - Channel Layer)]
+    View -.->|Signals| Cons
+    
+    Templates -->|Response| User

@@ -1,0 +1,285 @@
+{% extends 'tickets/base.html' %}
+{% load static %}
+
+{% block title %}Mis Asignaciones{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/incidencias.css' %}">
+<style>
+    /* Efecto de fila interactiva */
+    .row-clickable {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .row-clickable:hover {
+        background-color: rgba(13, 110, 253, 0.05) !important;
+        transform: translateY(-1px);
+        box-shadow: inset 4px 0 0 #0d6efd;
+    }
+    
+    .btn-pdf-table {
+        z-index: 10;
+        position: relative;
+        transition: transform 0.2s;
+    }
+    .btn-pdf-table:hover {
+        transform: scale(1.15);
+    }
+
+    /* Nota de ayuda posicionada estratégicamente */
+    .helper-note {
+        background: #f0f7ff;
+        border-left: 4px solid #0d6efd;
+        color: #084298;
+        font-size: 0.85rem;
+        border-radius: 8px;
+    }
+
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
+{% block header_title %}
+<div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+    <div class="d-flex align-items-center gap-3">
+        <div class="header-icon-bg">
+            <i class="bi {% if active_tab == 'reportadas' %}bi-megaphone-fill{% else %}bi-person-gear{% endif %} text-primary"></i>
+        </div>
+        <div>
+            <h3 class="mb-0 page-title">
+                {% if active_tab == 'reportadas' %}Incidencias Reportadas{% else %}Mis Asignaciones{% endif %}
+            </h3>
+            <p class="text-muted small mb-0">
+                {% if active_tab == 'reportadas' %}Tickets que has creado como solicitante.{% else %}Tickets asignados a tu cuenta para resolución.{% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- TABS DE NAVEGACIÓN -->
+    <div class="tab-modern shadow-sm border rounded-pill p-1 bg-white d-flex">
+        <a href="?tab=asignadas" class="tab-item {% if active_tab != 'reportadas' %}active{% endif %} rounded-pill px-4 py-2 text-decoration-none fw-bold small">
+            <i class="bi bi-person-check-fill me-1"></i> Asignadas
+        </a>
+        <a href="?tab=reportadas" class="tab-item {% if active_tab == 'reportadas' %}active{% endif %} rounded-pill px-4 py-2 text-decoration-none fw-bold small">
+            <i class="bi bi-megaphone-fill me-1"></i> Reportadas
+        </a>
+    </div>
+</div>
+
+<style>
+    .tab-modern .tab-item {
+        color: #64748b;
+        transition: all 0.2s ease;
+    }
+    .tab-modern .tab-item.active {
+        background-color: #0d6efd;
+        color: white;
+        box-shadow: 0 4px 10px rgba(13, 110, 253, 0.2);
+    }
+    .tab-modern .tab-item:not(.active):hover {
+        background-color: #f8f9fa;
+        color: #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="toolbar mb-3">
+    <form method="GET" class="d-flex align-items-center w-100 gap-3">
+        <input type="hidden" name="tab" value="{{ active_tab }}">
+        <div class="search-wrap" style="flex:1; max-width:380px; position: relative;">
+            <input type="text" name="search" 
+                value="{{ request.GET.search|default:'' }}" 
+                placeholder="Buscar por ID, descripción..." 
+                class="form-control-custom"> 
+            
+            {% if request.GET.search %}
+                <a href="?tab={{ active_tab }}" class="search-clear-btn">
+                    <i class="bi bi-x-circle-fill"></i>
+                </a>
+            {% endif %}
+
+            <button class="btn-search" type="submit">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+        
+        <div class="toolbar-right ms-auto d-flex align-items-center gap-2">
+            <a href="{% url 'reporte_tecnico_pdf' %}"
+            class="btn btn-danger d-flex align-items-center gap-2 rounded-3 px-3 shadow-sm">
+                <i class="bi bi-file-earmark-pdf-fill"></i>
+                <span class="fw-bold">Descargar Reporte General</span>
+            </a>
+
+            <div class="dropdown">
+                <button class="filter-btn dropdown-toggle shadow-sm" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-sliders2"></i> 
+                    {% if request.GET.estado %}{{ request.GET.estado|capfirst }}{% else %}Filtrar Estado{% endif %}
+                </button>
+                <ul class="dropdown-menu shadow border-0">
+                    <li><a class="dropdown-item d-flex align-items-center gap-2" href="?tab={{ active_tab }}"><span class="dot bg-secondary"></span> Ver todos</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item d-flex align-items-center gap-2" href="?tab={{ active_tab }}&estado=pendiente"><span class="dot bg-warning"></span> Pendiente</a></li>
+                    <li><a class="dropdown-item d-flex align-items-center gap-2" href="?tab={{ active_tab }}&estado=en proceso"><span class="dot bg-primary"></span> En Proceso</a></li>
+                    <li><a class="dropdown-item d-flex align-items-center gap-2" href="?tab={{ active_tab }}&estado=resuelto"><span class="dot bg-success"></span> Resuelto</a></li>
+                    <li><a class="dropdown-item d-flex align-items-center gap-2" href="?tab={{ active_tab }}&estado=cerrado"><span class="dot bg-secondary"></span> Cerrado</a></li>
+                </ul>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="alert helper-note d-flex align-items-center py-2 px-3 mb-3 shadow-sm border-0" role="alert">
+    <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+    <div>
+        Haz clic sobre cualquier fila para <strong>gestionar el ticket</strong>. Para descargar la ficha individual, usa el botón <i class="bi bi-file-pdf text-danger"></i>.
+    </div>
+</div>
+
+<div class="card card-modern shadow-sm border-0 rounded-4 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light text-muted">
+                <tr>
+                    <th class="ps-4" style="width: 80px;">ID</th>
+                    <th style="width: 35%;">Incidencia / Información</th>
+                    <th style="width: 15%;">Área</th>
+                    <th style="width: 12%;">Prioridad</th>
+                    <th style="width: 15%;" class="text-center">Estado</th>
+                    <th style="width: 10%;" class="text-end pe-4">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for incidencia in incidencias %}
+                {% with estado_lower=incidencia.estado.name|lower %}
+                <tr class="row-clickable" data-href="{% url 'detalle_incidencia' incidencia.id %}" title="Clic para gestionar">
+                    <td class="ps-4">
+                        <span class="fw-bold text-primary font-monospace">#{{ incidencia.id|stringformat:"04d" }}</span>
+                    </td>
+
+                    <td>
+                        <div class="d-flex flex-column">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="fw-bold text-dark">{{ incidencia.descripcion|truncatechars:60 }}</span>
+                            </div>
+                            
+                            <div class="small fw-medium {% if active_tab == 'reportadas' %}text-success{% else %}text-primary{% endif %}">
+                                <i class="bi {% if active_tab == 'reportadas' %}bi-person-badge{% else %}bi-person-fill{% endif %} me-1"></i>
+                                {% if active_tab == 'reportadas' %}
+                                    <span class="text-muted">Soporte:</span> {{ incidencia.tecnico_asignado.get_full_name|default:"Por asignar" }}
+                                {% else %}
+                                    <span class="text-muted">Solicitante:</span> {{ incidencia.creador.get_full_name|default:incidencia.creador.username }}
+                                {% endif %}
+                            </div>
+
+                            <small class="text-muted" style="font-size: 0.75rem;">
+                                <i class="bi bi-calendar3 me-1"></i>
+                                {{ incidencia.fecha_creacion|date:"d/m/Y" }} • {{ incidencia.fecha_creacion|time:"H:i" }}
+                            </small>
+                        </div>
+                    </td>
+
+                    <td>
+                        <div class="d-flex align-items-center small text-muted">
+                            <i class="bi bi-building me-2"></i>{{ incidencia.area.name|default:"N/A" }}
+                        </div>
+                    </td>
+
+                    <td>
+                        {% with p=incidencia.prioridad|lower %}
+                        <span class="badge rounded-pill px-3 
+                            {% if 'crit' in p %}bg-danger
+                            {% elif 'alt' in p %}bg-warning text-dark
+                            {% elif 'med' in p %}bg-info text-dark
+                            {% else %}bg-secondary{% endif %}" style="font-size: 0.65rem;">
+                            {{ incidencia.prioridad|upper }}
+                        </span>
+                        {% endwith %}
+                    </td>
+
+                    <td class="text-center">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <span class="status-dot me-2 
+                                {% if estado_lower == 'pendiente' %}bg-warning
+                                {% elif estado_lower == 'en proceso' %}bg-primary
+                                {% elif estado_lower == 'resuelto' %}bg-success
+                                {% else %}bg-secondary{% endif %}"></span>
+                            <span class="fw-bold text-muted-hover" style="font-size: 0.85rem;">{{ incidencia.estado.name }}</span>
+                        </div>
+                    </td>
+
+                    <td class="pe-4 text-end">
+                        <div class="d-flex justify-content-end align-items-center gap-3">
+                            <i class="bi bi-eye text-primary opacity-25 d-none d-md-block"></i>
+                            
+                            <a href="{% url 'ticket_detalle_pdf' incidencia.id %}" 
+                                class="btn btn-sm btn-outline-danger btn-pdf-table rounded-circle shadow-sm"
+                                title="Descargar PDF"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onclick="event.stopPropagation(); window.open(this.href, '_blank'); return false;">
+                                    <i class="bi bi-file-pdf"></i>
+                            </a>
+                    </td>
+                </tr>
+                {% endwith %}
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-5">
+                        <div class="empty-state text-center py-4">
+                            <div class="empty-icon-wrap mb-3" style="font-size: 3.5rem; opacity: 0.2;">
+                                {% if request.GET.search or request.GET.estado %}
+                                    <i class="bi bi-search text-primary"></i>
+                                {% else %}
+                                    <i class="bi bi-clipboard-check text-success"></i>
+                                {% endif %}
+                            </div>
+                            
+                            <h3 class="h5 fw-bold text-dark">
+                                {% if request.GET.search or request.GET.estado %}
+                                    Sin coincidencias
+                                {% else %}
+                                    ¡Todo listo!
+                                {% endif %}
+                            </h3>
+                            
+                            <p class="text-muted mx-auto mb-4" style="max-width: 450px;">
+                                {% if request.GET.search or request.GET.estado %}
+                                    No se encontraron incidencias con los filtros aplicados.
+                                {% else %}
+                                    No tienes incidencias asignadas pendientes por el momento.
+                                {% endif %}
+                            </p>
+
+                            {% if request.GET.search or request.GET.estado %}
+                                <a href="?tab={{ active_tab }}" class="btn btn-outline-secondary rounded-pill px-4 btn-sm fw-bold">
+                                    <i class="bi bi-x-lg me-1"></i> Limpiar filtros
+                                </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const rows = document.querySelectorAll(".row-clickable");
+    rows.forEach(row => {
+        row.addEventListener("click", function(e) {
+            // Si el clic es en un enlace (como el PDF), no hace nada
+            if (e.target.closest('a')) return;
+            window.location.href = this.dataset.href;
+        });
+    });
+});
+</script>
+{% endblock %}

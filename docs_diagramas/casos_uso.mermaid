@@ -1,0 +1,30 @@
+graph LR
+    subgraph Actores
+        User[Trabajador]
+        Tec[Técnico]
+        Admin[Administrador]
+    end
+    
+    subgraph Casos_de_Uso
+        UC1(Reportar Incidencia)
+        UC2(Ver Estado de Mis Tickets)
+        UC3(Responder Comentarios)
+        UC4(Gestionar Tickets Asignados)
+        UC5(Registrar Solución/Evidencia)
+        UC6(Asignar Técnicos)
+        UC7(Gestionar Usuarios y Áreas)
+        UC8(Dashboard Global de Estadísticas)
+    end
+    
+    User --> UC1
+    User --> UC2
+    User --> UC3
+    
+    Tec --> UC4
+    Tec --> UC5
+    Tec --> UC3
+    
+    Admin --> UC6
+    Admin --> UC7
+    Admin --> UC8
+    Admin --> UC4

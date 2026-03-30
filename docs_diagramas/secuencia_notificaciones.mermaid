@@ -1,0 +1,15 @@
+sequenceDiagram
+    participant U as Actor (Admin/Tec/User)
+    participant D as Django View / Signal
+    participant M as Model (Notificacion)
+    participant CL as Channel Layer (Redis)
+    participant C as WebSocket Consumer
+    participant F as Frontend (JS / HTMX)
+
+    U->>D: Realiza acción (ej. Comentar, Resolver)
+    D->>M: Crea Notificacion y NotificacionUsuario
+    M-->>D: post_save Triggered
+    D->>CL: send_notification_update (Async Group Send)
+    CL->>C: Recibe mensaje de grupo
+    C->>F: Envía Payload JSON (unread_count, message)
+    F->>F: Actualiza Campana (JS) y Lista (HTMX)

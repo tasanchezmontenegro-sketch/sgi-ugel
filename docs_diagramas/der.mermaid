@@ -1,0 +1,82 @@
+erDiagram
+    CUSTOM_USER {
+        int id PK
+        string username
+        string role "usuario, tecnico, administrador"
+        string email
+        string password
+        string telefono
+        int area_id FK
+        string foto
+        datetime last_seen
+        datetime date_joined
+        boolean is_active
+        boolean must_change_password
+        datetime last_password_change
+    }
+
+    AREA {
+        int id PK
+        string name
+    }
+
+    ESTADO {
+        int id PK
+        string name "Pendiente, En Proceso, Resuelto, Cerrado"
+    }
+
+    INCIDENCIA {
+        int id PK
+        int creador_id FK "CustomUser"
+        int area_id FK "Area"
+        string categoria "hardware, software, red, sistema"
+        string prioridad "baja, media, alta, critica"
+        text descripcion
+        string imagen_adjunta
+        datetime fecha_creacion
+        int estado_id FK "Estado"
+        int tecnico_asignado_id FK "CustomUser"
+        date fecha_programada_atencion
+        time hora_programada_atencion
+        text observaciones_internas
+        text solucion_aplicada
+        string evidencia_solucion
+    }
+
+    COMENTARIO {
+        int id PK
+        int incidencia_id FK "Incidencia"
+        int usuario_id FK "CustomUser"
+        string tipo_comentario "tecnico, confirmacion, persiste, observacion"
+        text texto
+        datetime fecha_creacion
+        string evidencia_adjunta
+    }
+
+    NOTIFICACION {
+        int id PK
+        int incidencia_id FK "Incidencia"
+        text mensaje
+        string tipo "asignacion, estado, comentario, etc."
+        datetime fecha_creacion
+        string link
+    }
+
+    NOTIFICACION_USUARIO {
+        int id PK
+        int usuario_id FK "CustomUser"
+        int notificacion_id FK "Notificacion"
+        boolean leido
+        datetime fecha_recibida
+    }
+
+    AREA ||--o{ CUSTOM_USER : "pertenece"
+    AREA ||--o{ INCIDENCIA : "afecta a"
+    CUSTOM_USER ||--o{ INCIDENCIA : "crea (trabajador)"
+    CUSTOM_USER ||--o{ INCIDENCIA : "atiende (tecnico)"
+    ESTADO ||--o{ INCIDENCIA : "define"
+    INCIDENCIA ||--o{ COMENTARIO : "tiene"
+    CUSTOM_USER ||--o{ COMENTARIO : "escribe"
+    INCIDENCIA ||--o{ NOTIFICACION : "genera"
+    NOTIFICACION ||--o{ NOTIFICACION_USUARIO : "distribuida a"
+    CUSTOM_USER ||--o{ NOTIFICACION_USUARIO : "recibe"

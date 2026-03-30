@@ -1,0 +1,15 @@
+graph LR
+    User[Browser Client] --> DNS{Route 53 / Cloudflare}
+    DNS --> LB[Nginx Ingress / ALB]
+    LB --> Docker[Docker Container Service]
+    
+    subgraph Docker_Host
+        D_API[Django App - Gunicorn/Daphne]
+        D_Celery[Celery Workers]
+    end
+    
+    D_API --> RDS[(PostgreSQL Managed)]
+    D_API --> Redis[(Redis Cache/WS)]
+    D_API --> S3[S3 Bucket - Static/Media]
+    
+    Monitoring[CloudWatch / Grafana] -.-> Docker

@@ -1,0 +1,19 @@
+flowchart TD
+    Login[Login] --> Auth{Validación}
+    Auth --> Dashboard[Dashboard Central]
+    
+    Dashboard --> IncList[Lista de Incidencias]
+    Dashboard --> Profile[Mi Perfil / Ajustes]
+    
+    IncList --> Det[Detalle de Incidencia]
+    IncList --> Create[Formulario Crear Incidencia]
+    
+    subgraph Admin_Only
+        Users[Gestión de Usuarios]
+        Areas[Configuración de Áreas]
+        Reports[Generación de Reportes PDF]
+    end
+    
+    Dashboard -.-> Admin_Only
+    Det --> Resolved[Modal Resolución]
+    Det --> Comms[Hilo de Comentarios]

@@ -1,0 +1,17 @@
+stateDiagram-v2
+    [*] --> Pendiente : Registro de Incidencia
+    
+    Pendiente --> En_Proceso : Admin asigna técnico
+    Pendiente --> En_Proceso : Técnico auto-asigna
+    
+    En_Proceso --> Resuelto : Técnico registra solución
+    
+    Resuelto --> Cerrado : Usuario confirma solución
+    Resuelto --> En_Proceso : Usuario reporta que persiste (Reabrir)
+    
+    Cerrado --> [*]
+    
+    state En_Proceso {
+        [*] --> Atencion_Programada
+        Atencion_Programada --> Ejecucion_Tecnica
+    }

@@ -1,0 +1,244 @@
+{% extends 'tickets/base.html' %}
+{% load static %}
+
+{% block title %}Iniciar Sesión | Soporte TI{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --login-bg: #f8fafc;
+        --card-bg: #ffffff;
+        --accent: #2563eb;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+    }
+    
+    /* Reset global container impact on login */
+    .content-area, .content-body {
+        padding: 0 !important;
+        margin: 0 !important;
+        min-height: 100vh !important;
+    }
+
+    html, body {
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: var(--login-bg);
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .login-wrapper {
+        height: 100vh;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0;
+        background: radial-gradient(circle at top right, #e2e8f0 0%, #f8fafc 100%);
+    }
+
+    .login-container {
+        width: 100%;
+        max-width: 420px;
+        animation: fadeInDown 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .login-card {
+        background: var(--card-bg);
+        border-radius: 24px;
+        padding: 3.5rem 2.5rem;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+        border: 1px solid #e2e8f0;
+    }
+
+    .login-header img {
+        width: 90px;
+        margin-bottom: 1.5rem;
+        filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05));
+    }
+
+    .login-title {
+        color: var(--text-main);
+        font-family: 'Syne', sans-serif;
+        font-weight: 800;
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .login-subtitle {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .form-group-custom {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label-custom {
+        display: block;
+        color: var(--text-main);
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.6rem;
+    }
+
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1rem;
+        color: var(--text-muted);
+        font-size: 1.25rem;
+        transition: color 0.3s;
+    }
+
+    .form-input-custom {
+        width: 100%;
+        background: #f1f5f9;
+        border: 1.5px solid transparent;
+        border-radius: 12px;
+        padding: 12px 1rem 12px 3rem;
+        color: var(--text-main);
+        font-size: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-input-custom:focus {
+        background: #ffffff;
+        border-color: var(--accent);
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-input-custom:focus + .input-icon {
+        color: var(--accent);
+    }
+
+    .btn-login-custom {
+        width: 100%;
+        background: var(--accent);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 14px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+    }
+
+    .btn-login-custom:hover {
+        background: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2);
+    }
+
+    .btn-login-custom:active {
+        transform: scale(0.98);
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 1rem;
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .error-toast {
+        background: #fef2f2;
+        border: 1px solid #fee2e2;
+        color: #dc2626;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        animation: shakeX 0.5s;
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<div class="login-wrapper">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="text-center login-header">
+                <img src="{% static 'img/logo_ugel.webp' %}" alt="Logo Soporte TI" class="animate__animated animate__fadeIn">
+                <h1 class="login-title">Soporte TI</h1>
+                <p class="login-subtitle">Gestión de Incidentes UGEL Morropón</p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                
+
+                <div class="form-group-custom">
+                    <label class="form-label-custom">Usuario</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-person input-icon"></i>
+                        <input type="text" name="username" class="form-input-custom" placeholder="Ingresa tu usuario" required autofocus>
+                    </div>
+                </div>
+
+                <div class="form-group-custom">
+                    <label class="form-label-custom">Contraseña</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-shield-lock input-icon"></i>
+                        <input type="password" name="password" id="id_password" class="form-input-custom" placeholder="••••••••" required>
+                        <button type="button" class="toggle-password" id="togglePassword">
+                            <i class="bi bi-eye" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login-custom">
+                    Ingresar al Sistema <i class="bi bi-arrow-right-short ms-1"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('id_password');
+        const eyeIcon = document.getElementById('eyeIcon');
+
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                eyeIcon.classList.toggle('bi-eye');
+                eyeIcon.classList.toggle('bi-eye-slash');
+            });
+        }
+    });
+</script>
+{% endblock %}

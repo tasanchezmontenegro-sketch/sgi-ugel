@@ -1,0 +1,355 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gestión de Incidencias UGEL Morropón{% endblock %}</title>
+
+    <link rel="icon" type="image/x-icon" href="{% static 'img/logo_ugel.webp' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" />
+    <link rel="stylesheet" href="{% static 'css/estilos_globales.css' %}">
+    {% block extra_css %}{% endblock %}
+
+    <script src="{% static 'js/htmx.min.js' %}"></script>
+</head>
+
+<body>
+
+    {% if user.is_authenticated %}
+    <div class="sidebar" id="appSidebar">
+
+        <div class="sidebar-header">
+            <button class="mobile-close-btn d-lg-none" onclick="toggleSidebar()" aria-label="Cerrar menú">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <img src="{% static 'img/logo_ugel.webp' %}" alt="Logo Soporte TI">
+            <h5 style="font-weight:800;">UGEL Morropón</h5>
+            <small>Gestión de Incidentes</small>
+        </div>
+
+        <!-- 🔥 USUARIO LOGUEADO -->
+        <a href="{% url 'mi_perfil' %}" class="sidebar-user">
+
+            {% if user.foto %}
+            <img src="{{ user.foto.url }}" class="sidebar-user-avatar" alt="Usuario">
+            {% else %}
+            <div class="sidebar-user-avatar-initials">
+                {{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}
+            </div>
+            {% endif %}
+
+            <div class="sidebar-user-info">
+                <span class="user-name">{{ user.first_name }}</span>
+                <span class="user-lastname">{{ user.last_name }}</span>
+
+                <div class="mt-1">
+                    {% if user.role == 'administrador' %}
+                    <span class="badge bg-danger rounded-pill badge-role">Administrador</span>
+                    {% elif user.role == 'tecnico' %}
+                    <span class="badge bg-primary rounded-pill badge-role">Técnico</span>
+                    {% else %}
+                    <span class="badge bg-secondary rounded-pill badge-role">Trabajador</span>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+
+        {% if user.role == 'administrador' or user.is_staff %}
+        <a class="nav-card {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+            href="{% url 'dashboard' %}">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+        <a class="nav-card {% if request.resolver_match.url_name == 'incidencias_admin' %}active{% endif %}"
+            href="{% url 'incidencias_admin' %}">
+            <i class="bi bi-ticket-detailed"></i> Incidencias
+        </a>
+        <a class="nav-card {% if request.resolver_match.url_name == 'usuarios' %}active{% endif %}"
+            href="{% url 'usuarios' %}">
+            <i class="bi bi-people"></i> Usuarios
+        </a>
+
+        {% elif user.role == 'tecnico' %}
+        <a class="nav-card {% if request.resolver_match.url_name == 'dashboard_tecnico' %}active{% endif %}"
+            href="{% url 'dashboard_tecnico' %}">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+        <a class="nav-card {% if request.resolver_match.url_name == 'incidencias_asignadas' %}active{% endif %}"
+            href="{% url 'incidencias_asignadas' %}">
+            <i class="bi bi-ticket-detailed"></i> Mis Incidencias
+        </a>
+        <a class="nav-card {% if request.resolver_match.url_name == 'crear_incidencia' %}active{% endif %}"
+            href="{% url 'crear_incidencia' %}">
+            <i class="bi bi-plus-circle"></i> Reportar Incidencia
+        </a>
+
+        {% else %}
+        <a class="nav-card {% if request.resolver_match.url_name == 'mis_incidencias' %}active{% endif %}"
+            href="{% url 'mis_incidencias' %}">
+            <i class="bi bi-ticket-detailed"></i> Mis Incidencias
+        </a>
+        {% endif %}
+
+        <a class="nav-card {% if request.resolver_match.url_name == 'mi_perfil' %}active{% endif %}"
+            href="{% url 'mi_perfil' %}">
+            <i class="bi bi-person-circle"></i> Mi Perfil
+        </a>
+
+        <div class="sidebar-divider"></div>
+
+        <a class="nav-card nav-card-danger" href="{% url 'logout' %}">
+            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+        </a>
+
+    </div>
+    {% endif %}
+
+    <!-- FONDO PARA MÓVIL (Overlay) -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+
+    <div class="content-area {% if user.is_authenticated %}content-with-sidebar{% endif %}" id="contentArea">
+
+        {% if user.is_authenticated %}
+        <div class="app-topbar px-4 d-flex align-items-center">
+            <button class="topbar-toggle" onclick="toggleSidebar()">
+                <i class="bi bi-layout-sidebar" id="toggleIcon"></i>
+            </button>
+            <div class="topbar-right ms-auto d-flex align-items-center">{% include "tickets/partials/notification_bell.html" %}</div>
+        </div>
+        {% endif %}
+
+        <div class="content-body">
+            <div class="container-fluid">
+                {% block header_title %}{% endblock %}
+            </div>
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <audio id="notif-sound" src="{% static 'sounds/notificacion.mp3' %}" preload="auto"></audio>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <div id="django-messages-container" style="display:none;">
+        {% for message in messages %}
+        <span class="django-msg" data-level="{{ message.tags }}" data-text="{{ message|escapejs }}"></span>
+        {% endfor %}
+    </div>
+
+    <script>
+        // 🛡️ Inicialización de contadores
+        window.oldNotificationCount = parseInt(document.querySelector('#notif-badge-container .badge')?.textContent || "0");
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // 🔔 Toast mensajes Django
+            document.querySelectorAll('.django-msg').forEach(el => {
+                const level = el.dataset.level;
+                const text = el.dataset.text;
+                let icon = 'info';
+                if (level.includes('success')) icon = 'success';
+                else if (level.includes('error')) icon = 'error';
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: icon,
+                    title: text,
+                    showConfirmButton: false,
+                    timer: 4000
+                });
+            });
+        });
+    </script>
+
+    {% if user.is_authenticated %}
+    <script>
+        // NOTIFICACIONES EN TIEMPO REAL (WEBSOCKETS)
+        (function () {
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const wsUrl = protocol + window.location.host + '/ws/notifications/';
+            const socket = new WebSocket(wsUrl);
+
+            socket.onmessage = function (e) {
+                const data = JSON.parse(e.data);
+
+                // 1. Actualizar Badge Count
+                const badgeContainer = document.getElementById('notif-badge-container');
+                if (badgeContainer) {
+                    if (data.unread_count > 0) {
+                        badgeContainer.innerHTML = `
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger animate__animated animate__pulse animate__infinite">
+                                ${data.unread_count}
+                            </span>
+                        `;
+                    } else {
+                        badgeContainer.innerHTML = '';
+                    }
+                }
+
+                // 2. Reproducir Sonido
+                const sound = document.getElementById("notif-sound");
+                if (sound) {
+                    sound.currentTime = 0;
+                    sound.play().catch(() => console.log("Interacción requerida para sonido"));
+                }
+
+                // 3. Mostrar Toast
+                Swal.fire({
+                    toast: true,
+                    position: "top-end",
+                    icon: "info",
+                    title: "🔔 " + data.tipo.charAt(0).toUpperCase() + data.tipo.slice(1),
+                    text: data.message,
+                    showConfirmButton: false,
+                    timer: 5000,
+                    timerProgressBar: true
+                });
+
+                // 4. Refrescar lista de notificaciones si está htmx disponible y el dropdown abierto
+                if (window.htmx) {
+                    htmx.ajax('GET', '/notifications/list/', '#notifications-list');
+                }
+            };
+
+            socket.onclose = function (e) {
+                console.error('WebSocket cerrado inesperadamente. Intentando reconectar...');
+                setTimeout(function () { window.location.reload(); }, 5000);
+            };
+        })();
+
+        // 🚪 CONFIRMACIÓN DE CERRAR SESIÓN
+        document.querySelectorAll('a[href*="logout"]').forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                const logoutUrl = this.href;
+
+                Swal.fire({
+                    title: '¿Cerrar sesión?',
+                    text: 'Tendrás que ingresar tus credenciales nuevamente para acceder.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Sí, salir',
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true,
+                    customClass: {
+                        popup: 'rounded-4 shadow-lg',
+                        confirmButton: 'rounded-pill px-4',
+                        cancelButton: 'rounded-pill px-4'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = logoutUrl;
+                    }
+                });
+            });
+        });
+    </script>
+    {% endif %}
+
+    <script>
+
+        // Configuración global de HTMX para enviar el token CSRF en todas las peticiones POST
+        document.body.addEventListener('htmx:configRequest', (event) => {
+            event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+        });
+
+        // Función Sidebar
+        function toggleSidebar() {
+            const sidebar = document.getElementById('appSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            const isMobile = window.innerWidth <= 768;
+
+            if (isMobile) {
+                sidebar.classList.toggle('show');
+                if (backdrop) backdrop.classList.toggle('show');
+            } else {
+                sidebar.classList.toggle('collapsed');
+            }
+        }
+
+        // 🔥 INTERCEPTOR DE CONFIRMACIÓN PARA HTMX (SweetAlert2)
+        document.addEventListener("htmx:confirm", function (e) {
+            // Solo interceptar si el elemento tiene hx-confirm (como tu botón de confirmar)
+            if (e.target.hasAttribute("hx-confirm")) {
+                e.preventDefault(); // Detenemos el alert feo del navegador
+
+                Swal.fire({
+                    title: '¿Confirmar Solución?',
+                    text: e.target.getAttribute("hx-confirm"), // Extrae el texto que ya pusiste en el HTML
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#16a34a', // El verde de tu éxito
+                    cancelButtonColor: '#64748b',  // El gris de tu secundario
+                    confirmButtonText: '<i class="bi bi-check-lg"></i> Sí, confirmar',
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true,
+                    customClass: {
+                        popup: 'rounded-4 shadow-lg',
+                        confirmButton: 'rounded-pill px-4',
+                        cancelButton: 'rounded-pill px-4'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        e.detail.issueRequest(); // Si acepta, HTMX continúa la petición
+                    }
+                });
+            }
+        });
+
+    </script>
+    <script>
+        /* 🔥 LIGHTBOX GLOBAL (compatible con HTMX) */
+        document.addEventListener("click", function (e) {
+
+            // Abrir imagen
+            const trigger = e.target.closest(".lightbox-trigger");
+            if (trigger) {
+                const src = trigger.dataset.src || trigger.src;
+
+                const lightbox = document.getElementById("lightbox");
+                const img = document.getElementById("lightbox-img");
+
+                if (lightbox && img) {
+                    img.src = src;
+                    lightbox.style.display = "flex";
+                }
+            }
+
+            // Cerrar al hacer click fuera
+            if (e.target.id === "lightbox") {
+                document.getElementById("lightbox").style.display = "none";
+            }
+
+            // Cerrar con X
+            if (e.target.classList.contains("lightbox-close")) {
+                document.getElementById("lightbox").style.display = "none";
+            }
+        });
+
+        // Cerrar con ESC
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") {
+                const lightbox = document.getElementById("lightbox");
+                if (lightbox) lightbox.style.display = "none";
+            }
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+    {% block extra_js %}{% endblock %}
+
+    <div id="lightbox" class="lightbox" style="display: none;">
+        <span class="lightbox-close" style="cursor: pointer;">&times;</span>
+        <img id="lightbox-img" class="lightbox-content">
+    </div>
+</body>
+
+</html>
